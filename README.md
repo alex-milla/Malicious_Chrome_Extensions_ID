@@ -11,53 +11,53 @@ PowerShell tool to enrich Chrome Extension IDs with their names and status by qu
 
 ```powershell
 .\Bulk-Extension-Enrichment.ps1
+```
+
 The script will prompt you for:
 
-Input file path (local file or URL)
+1. **Input file path** (local file or URL)
+   - Example local: `C:\Users\security\extensions.txt`
+   - Example URL: `https://raw.githubusercontent.com/user/repo/main/extensions.txt`
 
-Example local: C:\Users\security\extensions.txt
+2. **Output file name** (optional, defaults to timestamped filename)
 
-Example URL: https://raw.githubusercontent.com/user/repo/main/extensions.txt
+## Input Format
 
-Output file name (optional, defaults to timestamped filename)
-
-Input Format
 One Extension ID per line (TXT or CSV):
 
-text
+```text
 mdaboflcmhejfihjcbmdiebgfchigjcf
 gaoflciahikhligngeccdecgfjngejlh
 fedimamkpgiemhacbdhkkaihgofncola
-Output Format
+```
+
+## Output Format
+
 CSV file with three columns:
 
-ExtensionID	ExtensionName	Status
-mdaboflcmhejfihjcbmdiebgfchigjcf	Blipshot: One-Click Full Page Screenshot	Active
-gaoflciahikhligngeccdecgfjngejlh	Removed/NotFound	Removed
-fedimamkpgiemhacbdhkkaihgofncola	WAToolkit	Active
-Status values:
+| ExtensionID | ExtensionName | Status |
+|-------------|---------------|--------|
+| mdaboflcmhejfihjcbmdiebgfchigjcf | Blipshot: One-Click Full Page Screenshot | Active |
+| gaoflciahikhligngeccdecgfjngejlh | Removed/NotFound | Removed |
+| fedimamkpgiemhacbdhkkaihgofncola | WAToolkit | Active |
 
-Active: Extension found in Chrome Web Store
+**Status values:**
+- `Active`: Extension found in Chrome Web Store
+- `Removed`: Extension no longer available
+- `Unknown`: Extension exists but name unavailable
+- `Error`: Connection or query error
 
-Removed: Extension no longer available
+## Features
 
-Unknown: Extension exists but name unavailable
+- Load extension IDs from local files or URLs
+- Real-time progress with percentage and color-coded output
+- Automatic rate limiting (500ms between requests)
+- Summary statistics upon completion
+- Timestamped output files
 
-Error: Connection or query error
+## Example
 
-Features
-Load extension IDs from local files or URLs
-
-Real-time progress with percentage and color-coded output
-
-Automatic rate limiting (500ms between requests)
-
-Summary statistics upon completion
-
-Timestamped output files
-
-Example
-powershell
+```powershell
 .\Bulk-Extension-Enrichment.ps1
 
 # Input
@@ -76,10 +76,13 @@ Active: 45
 Removed: 237
 Unknown/Error: 10
 Generated file: malicious_extensions_enriched_20260207_001234.csv
-Use with Microsoft Sentinel
+```
+
+## Use with Microsoft Sentinel
+
 Load the generated CSV in KQL queries:
 
-text
+```kusto
 let MaliciousExtensions = externaldata(ExtensionID:string, ExtensionName:string, Status:string)
 [@"https://raw.githubusercontent.com/user/repo/main/malicious_extensions.csv"]
 with (format="csv", ignoreFirstRecord=true);
@@ -89,14 +92,15 @@ DeviceEvents
 | extend ExtensionID = tostring(ExtensionData.extensionId)
 | join kind=inner (MaliciousExtensions) on ExtensionID
 | project TimeGenerated=Timestamp, DeviceName, AccountName=InitiatingProcessAccountName, ExtensionID, ExtensionName, Status
-Author
-Alex Milla
+```
 
-alexmilla.net
+## Author
 
-cibersecurity.io
+**Alex Milla**
+- [alexmilla.net](https://alexmilla.net)
+- [cibersecurity.io](https://cibersecurity.io)
+- [cyberintelligence.dev](https://cyberintelligence.dev)
 
-cyberintelligence.dev
+## License
 
-License
 MIT License
