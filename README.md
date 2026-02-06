@@ -78,29 +78,10 @@ Unknown/Error: 10
 Generated file: malicious_extensions_enriched_20260207_001234.csv
 ```
 
-## Use with Microsoft Sentinel
-
-Load the generated CSV in KQL queries:
-
-```kusto
-let MaliciousExtensions = externaldata(ExtensionID:string, ExtensionName:string, Status:string)
-[@"https://raw.githubusercontent.com/user/repo/main/malicious_extensions.csv"]
-with (format="csv", ignoreFirstRecord=true);
-DeviceEvents
-| where AdditionalFields has "extensionId"
-| extend ExtensionData = parse_json(AdditionalFields)
-| extend ExtensionID = tostring(ExtensionData.extensionId)
-| join kind=inner (MaliciousExtensions) on ExtensionID
-| project TimeGenerated=Timestamp, DeviceName, AccountName=InitiatingProcessAccountName, ExtensionID, ExtensionName, Status
-```
-
 ## Author
 
 **Alex Milla**
-- [alexmilla.net](https://alexmilla.net)
-- [cibersecurity.io](https://cibersecurity.io)
-- [cyberintelligence.dev](https://cyberintelligence.dev)
-
+- [alexmilla.dev](https://alexmilla.dev)
 ## License
 
 MIT License
