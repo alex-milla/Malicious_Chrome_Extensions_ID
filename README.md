@@ -33,13 +33,13 @@ fedimamkpgiemhacbdhkkaihgofncola
 
 ## Output Format
 
-CSV file with three columns:
+CSV file with four columns:
 
-| ExtensionID | ExtensionName | Status |
-|-------------|---------------|--------|
-| mdaboflcmhejfihjcbmdiebgfchigjcf | Blipshot: One-Click Full Page Screenshot | Active |
-| gaoflciahikhligngeccdecgfjngejlh | Removed/NotFound | Removed |
-| fedimamkpgiemhacbdhkkaihgofncola | WAToolkit | Active |
+| ExtensionID | ExtensionName | Status | ChromeStoreURL |
+|-------------|---------------|--------|----------------|
+| mdaboflcmhejfihjcbmdiebgfchigjcf | Blipshot: One-Click Full Page Screenshot | Active | https://chrome.google.com/webstore/detail/mdaboflcmhejfihjcbmdiebgfchigjcf |
+| gaoflciahikhligngeccdecgfjngejlh | Removed/NotFound | Removed | https://chrome.google.com/webstore/detail/gaoflciahikhligngeccdecgfjngejlh |
+| fedimamkpgiemhacbdhkkaihgofncola | WAToolkit | Active | https://chrome.google.com/webstore/detail/fedimamkpgiemhacbdhkkaihgofncola |
 
 **Status values:**
 - `Active`: Extension found in Chrome Web Store
@@ -47,13 +47,17 @@ CSV file with three columns:
 - `Unknown`: Extension exists but name unavailable
 - `Error`: Connection or query error
 
+**Note:** All four columns are always generated for consistency, ensuring compatibility with CSV parsers and SIEM tools.
+
 ## Features
 
 - Load extension IDs from local files or URLs
+- Generates consistent 4-column CSV output
 - Real-time progress with percentage and color-coded output
 - Automatic rate limiting (500ms between requests)
 - Summary statistics upon completion
 - Timestamped output files
+- Chrome Web Store URL included for quick validation
 
 ## Example
 
@@ -75,13 +79,53 @@ Total processed: 292
 Active: 45
 Removed: 237
 Unknown/Error: 10
-Generated file: malicious_extensions_enriched_20260207_001234.csv
+Generated file: malicious_extensions_enriched_20260208_175300.csv
+```
+
+## Use with Microsoft Sentinel
+
+Load the generated CSV in KQL queries:
+
+```kusto
+let MaliciousExtensions = externaldata(ExtensionID:string, ExtensionName:string, Status:string, ChromeStoreURL:string)
+[@"https://raw.githubusercontent.com/user/repo/main/malicious_extensions.csv"]
+with (format="csv", ignoreFirstRecord=true);
+DeviceEvents
+| where AdditionalFields has "extensionId"
+| extend ExtensionData = parse_json(AdditionalFields)
+| extend ExtensionID = tostring(ExtensionData.extensionId)
+| join kind=inner (MaliciousExtensions) on ExtensionID
+| project 
+    TimeGenerated=Timestamp, 
+    DeviceName, 
+    AccountName=InitiatingProcessAccountName, 
+    ExtensionID, 
+    ExtensionName, 
+    Status,
+    ChromeStoreURL
+```
+
+## Use with Python/Pandas
+
+```python
+import pandas as pd
+
+# Load enriched data
+df = pd.read_csv('malicious_extensions_enriched_20260208_175300.csv')
+
+# Filter active malicious extensions
+active_threats = df[df['Status'] == 'Active']
+print(f"Active malicious extensions: {len(active_threats)}")
+
+# Display results
+print(active_threats[['ExtensionID', 'ExtensionName', 'ChromeStoreURL']])
 ```
 
 ## Author
 
 **Alex Milla**
 - [alexmilla.dev](https://alexmilla.dev)
+
 ## License
 
 MIT License
